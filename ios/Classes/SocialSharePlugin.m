@@ -5,6 +5,12 @@
 
 #import "SocialSharePlugin.h"
 #include <objc/runtime.h>
+#import "FBSDKShareKit/FBSDKShareKit.h"
+
+@interface SocialSharePlugin() <FBSDKSharingDelegate>
+
+@end
+
 
 @implementation SocialSharePlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
@@ -118,6 +124,23 @@
         } else {
             result(@"not supported or no facebook installed");
         }
+    } else if ([@"shareFacebookPost" isEqualToString:call.method]) {
+        NSString *quote = call.arguments[@"quote"];
+        NSString *url = call.arguments[@"url"];
+        NSString *hashtag = call.arguments[@"hashtag"];
+        
+        FBSDKShareLinkContent *shareLinkContent = [FBSDKShareLinkContent new];
+        shareLinkContent.quote = quote;
+        if ([url isKindOfClass: [NSString class]] && url.length > 0) {
+            shareLinkContent.contentURL = [NSURL URLWithString:url];
+        }
+        if ([hashtag isKindOfClass: [NSString class]] && hashtag && hashtag.length > 0) {
+            shareLinkContent.hashtag = [FBSDKHashtag hashtagWithString:hashtag];
+        }
+        
+        FBSDKMessageDialog *shareDialog = [FBSDKMessageDialog dialogWithContent:shareLinkContent delegate:self];
+        [shareDialog show];
+        
     } else if ([@"copyToClipboard" isEqualToString:call.method]) {
         NSString *content = call.arguments[@"content"];
         UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
@@ -338,6 +361,20 @@
     } else {
         result(FlutterMethodNotImplemented);
     }
+
+}
+
+// Facebook delegate methods
+- (void) sharer:(id<FBSDKSharing>)sharer didCompleteWithResults:(NSDictionary<NSString *,id> *)results {
+    
+}
+
+- (void) sharerDidCancel:(id<FBSDKSharing>)sharer {
+    
+}
+
+- (void) sharer:(id<FBSDKSharing>)sharer didFailWithError:(NSError *)error {
+    
 }
 
 @end
