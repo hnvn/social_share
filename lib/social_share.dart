@@ -132,7 +132,7 @@ class SocialShare {
     if (hashtags != null && hashtags.isNotEmpty) {
       String tags = "";
       hashtags.forEach((f) {
-        tags += ("%23" + f.toString() + " ").toString();
+        tags += ("#" + f.toString() + " ").toString();
       });
       args = <String, dynamic>{
         "captionText": captionText + "\n" + tags.toString(),

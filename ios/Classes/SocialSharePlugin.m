@@ -138,9 +138,8 @@
             shareLinkContent.hashtag = [FBSDKHashtag hashtagWithString:hashtag];
         }
         
-        FBSDKMessageDialog *shareDialog = [FBSDKMessageDialog dialogWithContent:shareLinkContent delegate:self];
-        [shareDialog show];
-        
+       [FBSDKMessageDialog showWithContent:shareLinkContent delegate:self];
+        result(@"sharing");
     } else if ([@"copyToClipboard" isEqualToString:call.method]) {
         NSString *content = call.arguments[@"content"];
         UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
@@ -154,13 +153,14 @@
         NSString *trailingText = call.arguments[@"trailingText"];
 
         NSString* urlTextEscaped = [urlstring stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+        NSString* captionTextEscaped = [captionText stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
         NSURL *url = [NSURL URLWithString: urlTextEscaped];
         NSURL *urlScheme = [NSURL URLWithString:@"twitter://"];
         if ([[UIApplication sharedApplication] canOpenURL:urlScheme]) {
             //check if twitter app exists
             //check if it contains a link
             if ( [ [url absoluteString]  length] == 0 ) {
-                NSString *urlSchemeTwitter = [NSString stringWithFormat:@"twitter://post?message=%@",captionText];
+                NSString *urlSchemeTwitter = [NSString stringWithFormat:@"twitter://post?message=%@",captionTextEscaped];
                 NSURL *urlSchemeSend = [NSURL URLWithString:urlSchemeTwitter];
                 if (@available(iOS 10.0, *)) {
                     [[UIApplication sharedApplication] openURL:urlSchemeSend options:@{} completionHandler:nil];
@@ -170,9 +170,9 @@
                 }
             } else {
                 //check if trailing text equals null
-                if ( [ trailingText   length] == 0 ) {
+                if ( [ trailingText length] == 0 ) {
                     //if trailing text is null
-                    NSString *urlSchemeSms = [NSString stringWithFormat:@"twitter://post?message=%@",captionText];
+                    NSString *urlSchemeSms = [NSString stringWithFormat:@"twitter://post?message=%@",captionTextEscaped];
                     //appending url with normal text and url scheme
                     NSString *urlWithLink = [urlSchemeSms stringByAppendingString:[url absoluteString]];
 
@@ -230,7 +230,7 @@
         } else {
             //if it does contains a link
             //check if trailing text equals null
-            if ( [ trailingText   length] == 0 ) {
+            if ( [ trailingText length] == 0 ) {
                 //if trailing text is null
                 //url scheme with normal text message
                 NSString *urlSchemeSms = [NSString stringWithFormat:@"sms:?&body=%@",msg];
