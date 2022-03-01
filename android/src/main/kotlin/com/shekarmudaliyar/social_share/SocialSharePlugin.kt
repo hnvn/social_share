@@ -8,10 +8,6 @@ import android.net.Uri
 import android.util.Log
 import androidx.annotation.NonNull
 import androidx.core.content.FileProvider
-import com.facebook.CallbackManager
-import com.facebook.FacebookCallback
-import com.facebook.FacebookException
-import com.facebook.share.Sharer
 import com.facebook.share.model.ShareHashtag
 import com.facebook.share.model.ShareLinkContent
 import com.facebook.share.widget.ShareDialog
@@ -23,6 +19,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import java.io.File
+import java.net.URLEncoder
 
 
 class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
@@ -49,7 +46,9 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             val backgroundBottomColor: String? = call.argument("backgroundBottomColor")
             val attributionURL: String? = call.argument("attributionURL")
             val file =  File(activeContext!!.cacheDir,stickerImage)
-            val stickerImageFile = FileProvider.getUriForFile(activeContext!!, activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share", file)
+            val stickerImageFile = FileProvider.getUriForFile(activeContext!!,
+                activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share",
+                file)
 
             val intent = Intent("com.instagram.share.ADD_TO_STORY")
             intent.type = "image/*"
@@ -59,7 +58,9 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             if (backgroundImage!=null) {
                 //check if background image is also provided
                 val backfile =  File(activeContext!!.cacheDir,backgroundImage)
-                val backgroundImageFile = FileProvider.getUriForFile(activeContext!!, activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share", backfile)
+                val backgroundImageFile = FileProvider.getUriForFile(activeContext!!,
+                    activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share",
+                    backfile)
                 intent.setDataAndType(backgroundImageFile,"image/*")
             }
             intent.putExtra("content_url", attributionURL)
@@ -83,7 +84,9 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             val appId: String? = call.argument("appId")
 
             val file =  File(activeContext!!.cacheDir,stickerImage)
-            val stickerImageFile = FileProvider.getUriForFile(activeContext!!, activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share", file)
+            val stickerImageFile = FileProvider.getUriForFile(activeContext!!,
+                activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share",
+                file)
             val intent = Intent("com.facebook.stories.ADD_TO_STORY")
             intent.type = "image/*"
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -134,7 +137,9 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             if (image!=null) {
                 //check if  image is also provided
                 val imagefile =  File(activeContext!!.cacheDir,image)
-                val imageFileUri = FileProvider.getUriForFile(activeContext!!, activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share", imagefile)
+                val imageFileUri = FileProvider.getUriForFile(activeContext!!,
+                    activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share",
+                    imagefile)
                 intent.type = "image/*"
                 intent.putExtra(Intent.EXTRA_STREAM,imageFileUri)
             } else {
@@ -190,7 +195,10 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             val text: String? = call.argument("captionText")
             val url: String? = call.argument("url")
             val trailingText: String? = call.argument("trailingText")
-            val urlScheme = "http://www.twitter.com/intent/tweet?text=$text$url$trailingText"
+            val escapedText: String? = if (text != null) URLEncoder.encode(text, "utf-8") else null;
+            val escapedUrl: String? = if (url != null) URLEncoder.encode(url, "utf-8") else null;
+            val escapedTrailingText: String? = if (trailingText != null) URLEncoder.encode(trailingText, "utf-8")  else null;
+            val urlScheme = "http://www.twitter.com/intent/tweet?text=$escapedText$escapedUrl$escapedTrailingText"
             Log.d("log",urlScheme)
             val intent = Intent(Intent.ACTION_VIEW)
             intent.data = Uri.parse(urlScheme)
@@ -248,7 +256,7 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        activity = binding.getActivity()
+        activity = binding.activity
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
