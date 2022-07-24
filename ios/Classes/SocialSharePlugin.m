@@ -135,7 +135,7 @@
             shareLinkContent.contentURL = [NSURL URLWithString:url];
         }
         if ([hashtag isKindOfClass: [NSString class]] && hashtag && hashtag.length > 0) {
-            shareLinkContent.hashtag = [FBSDKHashtag hashtagWithString:hashtag];
+            shareLinkContent.hashtag = [[FBSDKHashtag alloc] initWithString: hashtag];
         }
         
        [FBSDKMessageDialog showWithContent:shareLinkContent delegate:self];
