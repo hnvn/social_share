@@ -138,8 +138,22 @@
             shareLinkContent.hashtag = [[FBSDKHashtag alloc] initWithString: hashtag];
         }
         
-       [FBSDKMessageDialog showWithContent:shareLinkContent delegate:self];
-        result(@"sharing");
+//        FBSDKMessageDialog *dialog = [[FBSDKMessageDialog alloc] initWithContent:shareLinkContent delegate:self];
+//        if ([dialog canShow]) {
+//            [dialog show];
+//            result(@"sharing");
+//        } else {
+//            result(@"not supported or no messenger installed");
+//        }
+        
+        UIViewController *controller =[UIApplication sharedApplication].keyWindow.rootViewController;
+        FBSDKShareDialog *dialog = [[FBSDKShareDialog alloc] initWithViewController:controller content:shareLinkContent delegate:self];
+        if ([dialog canShow]) {
+            [dialog show];
+            result(@"sharing");
+        } else {
+            result(@"not supported or no facebook installed");
+        }
     } else if ([@"copyToClipboard" isEqualToString:call.method]) {
         NSString *content = call.arguments[@"content"];
         UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
