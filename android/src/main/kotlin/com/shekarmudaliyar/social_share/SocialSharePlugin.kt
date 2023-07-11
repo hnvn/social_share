@@ -20,6 +20,17 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import java.io.File
 import java.net.URLEncoder
+import android.content.ClipData
+
+import android.provider.MediaStore
+
+import android.content.ContentResolver
+
+import android.content.ContentValues
+
+import android.content.Context
+
+
 
 
 class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
@@ -37,24 +48,44 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         activeContext = if (activity != null) activity!!.applicationContext else context!!
 
-        if (call.method == "shareInstagramStory") {
-            //share on instagram story
-            val stickerImage: String? = call.argument("stickerImage")
-            val backgroundImage: String? = call.argument("backgroundImage")
+        if (call.method == "shareInstagramStory" || call.method == "shareFacebookStory") {
 
+            val destination : String
+            val appName : String
+            val intentString : String
+
+            if (call.method == "shareInstagramStory") {
+                destination = "com.instagram.sharedSticker"
+                appName = "com.instagram.android"
+                intentString = "com.instagram.share.ADD_TO_STORY"
+            } else {
+                destination = "com.facebook.sharedSticker";
+                appName = "com.facebook.katana";
+                intentString = "com.facebook.stories.ADD_TO_STORY"
+            }
+
+            val stickerImage: String? = call.argument("stickerImage")
             val backgroundTopColor: String? = call.argument("backgroundTopColor")
             val backgroundBottomColor: String? = call.argument("backgroundBottomColor")
             val attributionURL: String? = call.argument("attributionURL")
-            val file =  File(activeContext!!.cacheDir,stickerImage)
-            val stickerImageFile = FileProvider.getUriForFile(activeContext!!,
-                activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share",
-                file)
+            val backgroundImage: String? = call.argument("backgroundImage")
+            val backgroundVideo: String? = call.argument("backgroundVideo")
 
-            val intent = Intent("com.instagram.share.ADD_TO_STORY")
+            val file =  File(activeContext!!.cacheDir,stickerImage)
+            val stickerImageFile = FileProvider.getUriForFile(activeContext!!, activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share", file)
+            val appId: String? = call.argument("appId")
+
+            val intent = Intent(intentString)
+
             intent.type = "image/*"
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             intent.putExtra("interactive_asset_uri", stickerImageFile)
+
+            if (call.method == "shareFacebookStory") {
+                intent.putExtra("com.facebook.platform.extra.APPLICATION_ID", appId)
+            }
+
             if (backgroundImage!=null) {
                 //check if background image is also provided
                 val backfile =  File(activeContext!!.cacheDir,backgroundImage)
@@ -63,42 +94,20 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
                     backfile)
                 intent.setDataAndType(backgroundImageFile,"image/*")
             }
-            intent.putExtra("content_url", attributionURL)
-            intent.putExtra("top_background_color", backgroundTopColor)
-            intent.putExtra("bottom_background_color", backgroundBottomColor)
-            Log.d("", activity!!.toString())
-            // Instantiate activity and verify it will resolve implicit intent
-            activity!!.grantUriPermission("com.instagram.android", stickerImageFile, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            if (activity!!.packageManager.resolveActivity(intent, 0) != null) {
-                activeContext!!.startActivity(intent)
-                result.success("success")
-            } else {
-                result.success("error")
-            }
-        } else if (call.method == "shareFacebookStory") {
-            //share on facebook story
-            val stickerImage: String? = call.argument("stickerImage")
-            val backgroundTopColor: String? = call.argument("backgroundTopColor")
-            val backgroundBottomColor: String? = call.argument("backgroundBottomColor")
-            val attributionURL: String? = call.argument("attributionURL")
-            val appId: String? = call.argument("appId")
 
-            val file =  File(activeContext!!.cacheDir,stickerImage)
-            val stickerImageFile = FileProvider.getUriForFile(activeContext!!,
-                activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share",
-                file)
-            val intent = Intent("com.facebook.stories.ADD_TO_STORY")
-            intent.type = "image/*"
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            intent.putExtra("com.facebook.platform.extra.APPLICATION_ID", appId)
-            intent.putExtra("interactive_asset_uri", stickerImageFile)
+            if (backgroundVideo!=null) {
+                //check if background video is also provided
+                val backfile =  File(activeContext!!.cacheDir,backgroundVideo)
+                val backgroundVideoFile = FileProvider.getUriForFile(activeContext!!, activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share", backfile)
+                intent.setDataAndType(backgroundVideoFile,"video/*")
+            }
+
+            intent.putExtra("source_application", appId)
             intent.putExtra("content_url", attributionURL)
             intent.putExtra("top_background_color", backgroundTopColor)
             intent.putExtra("bottom_background_color", backgroundBottomColor)
-            Log.d("", activity!!.toString())
             // Instantiate activity and verify it will resolve implicit intent
-            activity!!.grantUriPermission("com.facebook.katana", stickerImageFile, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            activity!!.grantUriPermission(appName, stickerImageFile, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             if (activity!!.packageManager.resolveActivity(intent, 0) != null) {
                 activeContext!!.startActivity(intent)
                 result.success("success")
@@ -154,16 +163,36 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
             activeContext!!.startActivity(chooserIntent)
-            result.success(true)
+            result.success("success")
 
         } else if (call.method == "copyToClipboard") {
+
             //copies content onto the clipboard
             val content: String? = call.argument("content")
+            val image: String? = call.argument("image")
+
             val clipboard =context!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clip = ClipData.newPlainText("", content)
-            clipboard.setPrimaryClip(clip)
-            result.success(true)
-        } else if (call.method == "shareWhatsapp") {
+            if (image != null) {
+
+                val values = ContentValues(2)
+                values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                values.put(MediaStore.Images.Media.DATA, image)
+                val theContent: ContentResolver = activeContext!!.getContentResolver()
+                val imageUri =
+                    theContent.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                val clip = ClipData.newUri(theContent, "Image", imageUri)
+                clipboard.setPrimaryClip(clip)
+                
+            } else if (content != null) {
+                val clip = ClipData.newPlainText("", content)
+                clipboard.setPrimaryClip(clip)
+            } else {
+                result.success("error")
+                return
+            }
+            result.success("success")
+        } 
+        else if (call.method == "shareWhatsapp") {
             //shares content on WhatsApp
             val content: String? = call.argument("content")
             val whatsappIntent = Intent(Intent.ACTION_SEND)
@@ -172,9 +201,9 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             whatsappIntent.putExtra(Intent.EXTRA_TEXT, content)
             try {
                 activity!!.startActivity(whatsappIntent)
-                result.success("true")
+                result.success("success")
             } catch (ex: ActivityNotFoundException) {
-                result.success("false")
+                result.success("error")
             }
         } else if (call.method == "shareSms") {
             //shares content on sms
@@ -186,27 +215,23 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             intent.putExtra("sms_body", content)
             try {
                 activity!!.startActivity(intent)
-                result.success("true")
+                result.success("success")
             } catch (ex: ActivityNotFoundException) {
-                result.success("false")
+                result.success("error")
             }
         } else if (call.method == "shareTwitter") {
             //shares content on twitter
             val text: String? = call.argument("captionText")
-            val url: String? = call.argument("url")
-            val trailingText: String? = call.argument("trailingText")
-            val escapedText: String? = if (text != null) URLEncoder.encode(text, "utf-8") else null;
-            val escapedUrl: String? = if (url != null) URLEncoder.encode(url, "utf-8") else null;
-            val escapedTrailingText: String? = if (trailingText != null) URLEncoder.encode(trailingText, "utf-8")  else null;
-            val urlScheme = "http://www.twitter.com/intent/tweet?text=$escapedText$escapedUrl$escapedTrailingText"
-            Log.d("log",urlScheme)
+            val urlScheme = "http://www.twitter.com/intent/tweet?text=${URLEncoder.encode(text, Charsets.UTF_8.name())}"
+            Log.d("", urlScheme)
+
             val intent = Intent(Intent.ACTION_VIEW)
             intent.data = Uri.parse(urlScheme)
             try {
                 activity!!.startActivity(intent)
-                result.success("true")
+                result.success("success")
             } catch (ex: ActivityNotFoundException) {
-                result.success("false")
+                result.success("error")
             }
         }
         else if (call.method == "shareTelegram") {
@@ -218,9 +243,9 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             telegramIntent.putExtra(Intent.EXTRA_TEXT, content)
             try {
                 activity!!.startActivity(telegramIntent)
-                result.success("true")
+                result.success("success")
             } catch (ex: ActivityNotFoundException) {
-                result.success("false")
+                result.success("error")
             }
         }
         else if (call.method == "checkInstalledApps") {

@@ -8,7 +8,7 @@ PODS:
   - FBSDKShareKit (12.0.2):
     - FBSDKCoreKit (= 12.0.2)
   - Flutter (1.0.0)
-  - image_picker (0.0.1):
+  - image_picker_ios (0.0.1):
     - Flutter
   - path_provider_ios (0.0.1):
     - Flutter
@@ -19,7 +19,7 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - image_picker (from `.symlinks/plugins/image_picker/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
   - social_share (from `.symlinks/plugins/social_share/ios`)
 
@@ -33,23 +33,19 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  image_picker:
-    :path: ".symlinks/plugins/image_picker/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
   path_provider_ios:
     :path: ".symlinks/plugins/path_provider_ios/ios"
   social_share:
     :path: ".symlinks/plugins/social_share/ios"
 
 SPEC CHECKSUMS:
-  FBAEMKit: c6b8ddf8371640fcd1a3b844d0f8884c8f334cea
-  FBSDKCoreKit: 506c0fd1c09a3075f62be8fa36bdd921c563daa9
-  FBSDKCoreKit_Basics: c0701d1634c944d60dd3c6361d66dbd0e707a456
-  FBSDKShareKit: 4598ab1ded1a83635746f8cd681948f97ad29560
-  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
-  image_picker: e06f7a68f000bd36f552c1847e33cda96ed31f1f
-  path_provider_ios: 7d7ce634493af4477d156294792024ec3485acd5
-  social_share: 931718c3dd3d7e4c0d73258df2b8b0e185150c85
+  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  image_picker_ios: b786a5dcf033a8336a657191401bfdf12017dabb
+  path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
+  social_share: 702a5e3842addd22db515aa9e1e00a4b80a0296d
 
-PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+PODFILE CHECKSUM: 663715e941f9adb426e33bf9376914006f9ea95b
 
 COCOAPODS: 1.11.2
