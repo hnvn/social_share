@@ -191,8 +191,7 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
                 return
             }
             result.success("success")
-        } 
-        else if (call.method == "shareWhatsapp") {
+        } else if (call.method == "shareWhatsapp") {
             //shares content on WhatsApp
             val content: String? = call.argument("content")
             val whatsappIntent = Intent(Intent.ACTION_SEND)
@@ -233,8 +232,7 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             } catch (ex: ActivityNotFoundException) {
                 result.success("error")
             }
-        }
-        else if (call.method == "shareTelegram") {
+        } else if (call.method == "shareTelegram") {
             //shares content on Telegram
             val content: String? = call.argument("content")
             val telegramIntent = Intent(Intent.ACTION_SEND)
@@ -247,8 +245,7 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             } catch (ex: ActivityNotFoundException) {
                 result.success("error")
             }
-        }
-        else if (call.method == "checkInstalledApps") {
+        } else if (call.method == "checkInstalledApps") {
             //check if the apps exists
             //creating a mutable map of apps
             var apps:MutableMap<String, Boolean> = mutableMapOf()

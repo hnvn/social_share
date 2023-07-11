@@ -132,8 +132,7 @@
         } else {
             result(@"not supported or no facebook installed");
         }
-    }
-    else if ([@"copyToClipboard" isEqualToString:call.method]) {
+    } else if ([@"copyToClipboard" isEqualToString:call.method]) {
         
         NSString *content = call.arguments[@"content"];
         UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
