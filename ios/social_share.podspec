@@ -16,9 +16,9 @@ A new flutter plugin project.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'FBSDKCoreKit', "14.1.0"
-  s.dependency 'FBSDKShareKit', "14.1.0"
-  s.platform = :ios, '9.0'
+  s.dependency 'FBSDKCoreKit', "17.3.0"
+  s.dependency 'FBSDKShareKit', "17.3.0"
+  s.platform = :ios, '12.0'
 
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
 end

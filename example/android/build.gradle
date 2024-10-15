@@ -1,29 +1,49 @@
-buildscript {
-    ext.kotlin_version = '1.7.10'
-    repositories {
-        google()
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 
-rootProject.buildDir = '../build'
+ext {
+    androidApiVersion = 34
+}
+
+rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+    afterEvaluate {
+        // check if android block is available
+
+        if (it.hasProperty('android')) {
+
+            def javaVersion = JavaVersion.VERSION_17
+            android {
+                compileSdkVersion androidApiVersion
+                defaultConfig {
+                    targetSdkVersion androidApiVersion
+                }
+                compileOptions {
+                    sourceCompatibility javaVersion
+                    targetCompatibility javaVersion
+                }
+                tasks.withType(KotlinCompile).configureEach {
+                    kotlinOptions {
+                        jvmTarget = javaVersion.toString()
+                    }
+                }
+                println("Setting java version to ${javaVersion.toString()} which is $javaVersion")
+                println("Setting compileSdkVersion and targetSdkVersion to $androidApiVersion")
+            }
+        }
+
+    }
 }
 subprojects {
-    project.evaluationDependsOn(':app')
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register("clean", Delete) {

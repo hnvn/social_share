@@ -2,14 +2,15 @@ group 'com.shekarmudaliyar.social_share'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.5.30'
+    ext.kotlin_version = '1.7.10'
     repositories {
         google()
         jcenter()
+        mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.2'
+        classpath 'com.android.tools.build:gradle:8.7.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -18,6 +19,7 @@ rootProject.allprojects {
     repositories {
         google()
         jcenter()
+        mavenCentral()
     }
 }
 
@@ -25,7 +27,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 33
+    if (project.android.hasProperty("namespace")) {
+        namespace = "com.shekarmudaliyar.social_share"
+    }
+
+    compileSdkVersion 34
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -41,5 +47,5 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.facebook.android:facebook-share:5.15.3'
+    implementation 'com.facebook.android:facebook-share:17.0.2'
 }
