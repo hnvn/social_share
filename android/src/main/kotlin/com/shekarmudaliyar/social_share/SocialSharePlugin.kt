@@ -28,6 +28,10 @@ import java.net.URLEncoder
 
 
 class SocialSharePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
+    companion object {
+        const val TAG = "SocialSharePlugin"
+    }
+
     private lateinit var channel: MethodChannel
     private var activity: Activity? = null
     private var activeContext: Context? = null
@@ -47,6 +51,7 @@ class SocialSharePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             try {
                 FacebookSdk.sdkInitialize(activeContext!!)
             } catch (ex: Exception) {
+                Log.e(TAG, ex.message, ex)
                 result.success("error")
             }
             result.success("success")
