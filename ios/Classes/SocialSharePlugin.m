@@ -20,8 +20,10 @@
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-    if ([@"shareInstagramStory" isEqualToString:call.method] || [@"shareFacebookStory" isEqualToString:call.method]) {
-
+    if ([@"initFacebookSdk" isEqualToString:call.method]) {
+        // No need initalize FacebookSDK in iOS
+        result(@"success");
+    } else if ([@"shareInstagramStory" isEqualToString:call.method] || [@"shareFacebookStory" isEqualToString:call.method]) {
         NSString *destination;
         NSString *stories;
         if ([@"shareInstagramStory" isEqualToString:call.method]) {
@@ -54,38 +56,47 @@
         }
         
         // Assign background image asset and attribution link URL to pasteboard
-        NSMutableDictionary *pasteboardItems = [[NSMutableDictionary alloc]initWithDictionary: @{[NSString stringWithFormat:@"%@.stickerImage",destination] : imgShare}];
+        NSMutableDictionary *pasteboardItems = [[NSMutableDictionary alloc] initWithDictionary:
+                                                @{[NSString stringWithFormat:@"%@.stickerImage", destination] : imgShare}];
         
         if (![backgroundTopColor isKindOfClass:[NSNull class]]) {
-            [pasteboardItems setObject:backgroundTopColor forKey:[NSString stringWithFormat:@"%@.backgroundTopColor",destination]];
+            [pasteboardItems setObject:backgroundTopColor
+                                forKey:[NSString stringWithFormat:@"%@.backgroundTopColor", destination]];
         }
         
         if (![backgroundBottomColor isKindOfClass:[NSNull class]]) {
-            [pasteboardItems setObject:backgroundBottomColor forKey:[NSString stringWithFormat:@"%@.backgroundBottomColor",destination]];
+            [pasteboardItems setObject:backgroundBottomColor
+                                forKey:[NSString stringWithFormat:@"%@.backgroundBottomColor", destination]];
         }
         
         if (![attributionURL isKindOfClass:[NSNull class]]) {
-            [pasteboardItems setObject:attributionURL forKey:[NSString stringWithFormat:@"%@.contentURL",destination]];
+            [pasteboardItems setObject:attributionURL
+                                forKey:[NSString stringWithFormat:@"%@.contentURL",destination]];
         }
         
         if (![appId isKindOfClass:[NSNull class]] && [@"shareFacebookStory" isEqualToString:call.method]) {
-            [pasteboardItems setObject:appId forKey:[NSString stringWithFormat:@"%@.appID",destination]];
+            [pasteboardItems setObject:appId
+                                forKey:[NSString stringWithFormat:@"%@.appID",destination]];
         }
         
         //if you have a background image
         NSData *imgBackgroundShare;
         if ([fileManager fileExistsAtPath: backgroundImage]) {
             imgBackgroundShare = [[NSData alloc] initWithContentsOfFile:backgroundImage];
-            [pasteboardItems setObject:imgBackgroundShare forKey:[NSString stringWithFormat:@"%@.backgroundImage",destination]];
+            [pasteboardItems setObject:imgBackgroundShare
+                                forKey:[NSString stringWithFormat:@"%@.backgroundImage",destination]];
         }
         //if you have a background video
         NSData *videoBackgroundShare;
         if ([fileManager fileExistsAtPath: backgroundVideo]) {
-            videoBackgroundShare = [[NSData alloc] initWithContentsOfFile:backgroundVideo options:NSDataReadingMappedIfSafe error:nil];
-            [pasteboardItems setObject:videoBackgroundShare forKey:[NSString stringWithFormat:@"%@.backgroundVideo",destination]];
+            videoBackgroundShare = [[NSData alloc] initWithContentsOfFile: backgroundVideo
+                                                                  options: NSDataReadingMappedIfSafe
+                                                                    error:nil];
+            [pasteboardItems setObject:videoBackgroundShare
+                                forKey:[NSString stringWithFormat:@"%@.backgroundVideo", destination]];
         }
 
-        NSURL *urlScheme = [NSURL URLWithString:[NSString stringWithFormat:@"%@://share?source_application=%@", stories,appId]];
+        NSURL *urlScheme = [NSURL URLWithString: [NSString stringWithFormat:@"%@://share?source_application=%@", stories, appId]];
         
         if ([[UIApplication sharedApplication] canOpenURL:urlScheme]) {
 
@@ -125,13 +136,24 @@
 //        }
         
         UIViewController *controller =[UIApplication sharedApplication].keyWindow.rootViewController;
-        FBSDKShareDialog *dialog = [[FBSDKShareDialog alloc] initWithViewController:controller content:shareLinkContent delegate:self];
+        FBSDKShareDialog *dialog = [[FBSDKShareDialog alloc]
+                                    initWithViewController:controller
+                                    content:shareLinkContent
+                                    delegate:self];
+        [dialog setMode:FBSDKShareDialogModeNative];
         if ([dialog canShow]) {
             [dialog show];
-            result(@"sharing");
+            result(@"success");
+            return;
         } else {
-            result(@"not supported or no facebook installed");
+            [dialog setMode:FBSDKShareDialogModeWeb];
+            if ([dialog canShow]) {
+                [dialog show];
+                result(@"success");
+                return;
+            }
         }
+        result(@"error");
     } else if ([@"copyToClipboard" isEqualToString:call.method]) {
         
         NSString *content = call.arguments[@"content"];
@@ -263,10 +285,12 @@
         if ([image isEqual:[NSNull null]] || [ image  length] == 0 ) {
             //when image is not included
             NSArray *objectsToShare = @[content];
-            UIActivityViewController *activityVC = [[UIActivityViewController alloc] initWithActivityItems:objectsToShare applicationActivities:nil];
+            UIActivityViewController *activityVC = [[UIActivityViewController alloc]
+                                                    initWithActivityItems:objectsToShare
+                                                    applicationActivities:nil];
             UIViewController *controller =[UIApplication sharedApplication].keyWindow.rootViewController;
             [controller presentViewController:activityVC animated:YES completion:nil];
-            result([NSNumber numberWithBool:YES]);
+            result(@"success");
         } else {
             //when image file is included
             NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -276,47 +300,61 @@
                 imgShare = [[UIImage alloc] initWithContentsOfFile:image];
             }
             NSArray *objectsToShare = @[content, imgShare];
-            UIActivityViewController *activityVC = [[UIActivityViewController alloc] initWithActivityItems:objectsToShare applicationActivities:nil];
+            UIActivityViewController *activityVC = [[UIActivityViewController alloc]
+                                                    initWithActivityItems:objectsToShare
+                                                    applicationActivities:nil];
             UIViewController *controller =[UIApplication sharedApplication].keyWindow.rootViewController;
             [controller presentViewController:activityVC animated:YES completion:nil];
-            result([NSNumber numberWithBool:YES]);
+            result(@"success");
         }
     } else if ([@"checkInstalledApps" isEqualToString:call.method]) {
         NSMutableDictionary *installedApps = [[NSMutableDictionary alloc] init];
         if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"instagram-stories://"]]) {
-            [installedApps setObject:[NSNumber numberWithBool: YES] forKey:@"instagram"];
+            [installedApps setObject:[NSNumber numberWithBool: YES]
+                              forKey:@"instagram"];
         } else {
-            [installedApps setObject:[NSNumber numberWithBool: NO] forKey:@"instagram"];
+            [installedApps setObject:[NSNumber numberWithBool: NO]
+                              forKey:@"instagram"];
         }
 
         if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"facebook-stories://"]]) {
-            [installedApps setObject:[NSNumber numberWithBool: YES] forKey:@"facebook"];
+            [installedApps setObject:[NSNumber numberWithBool: YES]
+                              forKey:@"facebook"];
         } else {
-            [installedApps setObject:[NSNumber numberWithBool: NO] forKey:@"facebook"];
+            [installedApps setObject:[NSNumber numberWithBool: NO]
+                              forKey:@"facebook"];
         }
 
         if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"twitter://"]]) {
-            [installedApps setObject:[NSNumber numberWithBool: YES] forKey:@"twitter"];
+            [installedApps setObject:[NSNumber numberWithBool: YES]
+                              forKey:@"twitter"];
         } else {
-            [installedApps setObject:[NSNumber numberWithBool: NO] forKey:@"twitter"];
+            [installedApps setObject:[NSNumber numberWithBool: NO]
+                              forKey:@"twitter"];
         }
 
         if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"sms://"]]) {
-            [installedApps setObject:[NSNumber numberWithBool: YES] forKey:@"sms"];
+            [installedApps setObject:[NSNumber numberWithBool: YES]
+                              forKey:@"sms"];
         } else {
-            [installedApps setObject:[NSNumber numberWithBool: NO] forKey:@"sms"];
+            [installedApps setObject:[NSNumber numberWithBool: NO]
+                              forKey:@"sms"];
         }
 
         if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"whatsapp://"]]) {
-            [installedApps setObject:[NSNumber numberWithBool: YES] forKey:@"whatsapp"];
+            [installedApps setObject:[NSNumber numberWithBool: YES]
+                              forKey:@"whatsapp"];
         } else {
-            [installedApps setObject:[NSNumber numberWithBool: NO] forKey:@"whatsapp"];
+            [installedApps setObject:[NSNumber numberWithBool: NO]
+                              forKey:@"whatsapp"];
         }
 
         if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"tg://"]]) {
-            [installedApps setObject:[NSNumber numberWithBool: YES] forKey:@"telegram"];
+            [installedApps setObject:[NSNumber numberWithBool: YES]
+                              forKey:@"telegram"];
         } else {
-            [installedApps setObject:[NSNumber numberWithBool: NO] forKey:@"telegram"];
+            [installedApps setObject:[NSNumber numberWithBool: NO]
+                              forKey:@"telegram"];
         }
         result(installedApps);
     } else {

@@ -7,6 +7,11 @@ import 'package:path_provider/path_provider.dart';
 class SocialShare {
   static const MethodChannel _channel = const MethodChannel('social_share');
 
+  static Future<String?> initFacebookSdk() async {
+    final response = await _channel.invokeMethod<String>('initFacebookSdk');
+    return response;
+  }
+
   static Future<String?> shareInstagramStory({
     required String appId,
     required String imagePath,
@@ -85,7 +90,7 @@ class SocialShare {
       }
     }
 
-    final String? response = await _channel.invokeMethod(platform, args);
+    final response = await _channel.invokeMethod<String>(platform, args);
     return response;
   }
 
@@ -96,8 +101,8 @@ class SocialShare {
       "url": url,
       "hashtag": hashtag,
     };
-    final String? response =
-        await _channel.invokeMethod('shareFacebookPost', args);
+    final response =
+        await _channel.invokeMethod<String>('shareFacebookPost', args);
     return response;
   }
 
@@ -134,8 +139,8 @@ class SocialShare {
     Map<String, dynamic> args = <String, dynamic>{
       "captionText": _captionText + " ",
     };
-    final String? version = await _channel.invokeMethod('shareTwitter', args);
-    return version;
+    final response = await _channel.invokeMethod<String>('shareTwitter', args);
+    return response;
   }
 
   static Future<String?> shareSms(String message,
@@ -158,8 +163,8 @@ class SocialShare {
         "message": message + (url ?? '') + (trailingText ?? ''),
       };
     }
-    final String? version = await _channel.invokeMethod('shareSms', args);
-    return version;
+    final response = await _channel.invokeMethod<String>('shareSms', args);
+    return response;
   }
 
   static Future<String?> copyToClipboard({String? text, String? image}) async {
@@ -167,8 +172,8 @@ class SocialShare {
       "content": text,
       "image": image,
     };
-    final String? response =
-        await _channel.invokeMethod('copyToClipboard', args);
+    final response =
+        await _channel.invokeMethod<String>('copyToClipboard', args);
     return response;
   }
 
@@ -185,25 +190,25 @@ class SocialShare {
       }
     }
     args = <String, dynamic>{"image": _imagePath, "content": contentText};
-    final bool? version = await _channel.invokeMethod('shareOptions', args);
-    return version;
+    final response = await _channel.invokeMethod<String>('shareOptions', args);
+    return response == "success";
   }
 
   static Future<String?> shareWhatsapp(String content) async {
     final Map<String, dynamic> args = <String, dynamic>{"content": content};
-    final String? version = await _channel.invokeMethod('shareWhatsapp', args);
-    return version;
+    final response = await _channel.invokeMethod<String>('shareWhatsapp', args);
+    return response;
   }
 
   static Future<Map?> checkInstalledAppsForShare() async {
-    final Map? apps = await _channel.invokeMethod('checkInstalledApps');
+    final apps = await _channel.invokeMethod<Map>('checkInstalledApps');
     return apps;
   }
 
   static Future<String?> shareTelegram(String content) async {
     final Map<String, dynamic> args = <String, dynamic>{"content": content};
-    final String? version = await _channel.invokeMethod('shareTelegram', args);
-    return version;
+    final response = await _channel.invokeMethod<String>('shareTelegram', args);
+    return response;
   }
 
 // static Future<String> shareSlack() async {

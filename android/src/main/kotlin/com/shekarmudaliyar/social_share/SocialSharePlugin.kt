@@ -11,8 +11,8 @@ import android.provider.MediaStore
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
-import androidx.annotation.NonNull
 import androidx.core.content.FileProvider
+import com.facebook.FacebookSdk
 import com.facebook.share.model.ShareHashtag
 import com.facebook.share.model.ShareLinkContent
 import com.facebook.share.widget.ShareDialog
@@ -33,16 +33,24 @@ class SocialSharePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private var activeContext: Context? = null
     private var context: Context? = null
 
-    override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+    override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         context = flutterPluginBinding.applicationContext
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "social_share")
         channel.setMethodCallHandler(this)
+
     }
 
-    override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+    override fun onMethodCall(call: MethodCall, result: Result) {
         activeContext = if (activity != null) activity!!.applicationContext else context!!
 
-        if (call.method == "shareInstagramStory" || call.method == "shareFacebookStory") {
+        if (call.method == "initFacebookSdk") {
+            try {
+                FacebookSdk.sdkInitialize(activeContext!!)
+            } catch (ex: Exception) {
+                result.success("error")
+            }
+            result.success("success")
+        } else if (call.method == "shareInstagramStory" || call.method == "shareFacebookStory") {
 
             val destination: String
             val appName: String
@@ -86,22 +94,22 @@ class SocialSharePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
             if (backgroundImage != null) {
                 //check if background image is also provided
-                val backfile = File(activeContext!!.cacheDir, backgroundImage)
+                val backgroundFile = File(activeContext!!.cacheDir, backgroundImage)
                 val backgroundImageFile = FileProvider.getUriForFile(
                     activeContext!!,
                     activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share",
-                    backfile
+                    backgroundFile
                 )
                 intent.setDataAndType(backgroundImageFile, "image/*")
             }
 
             if (backgroundVideo != null) {
                 //check if background video is also provided
-                val backfile = File(activeContext!!.cacheDir, backgroundVideo)
+                val backgroundFile = File(activeContext!!.cacheDir, backgroundVideo)
                 val backgroundVideoFile = FileProvider.getUriForFile(
                     activeContext!!,
                     activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share",
-                    backfile
+                    backgroundFile
                 )
                 intent.setDataAndType(backgroundVideoFile, "video/*")
             }
@@ -265,21 +273,22 @@ class SocialSharePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         } else if (call.method == "checkInstalledApps") {
             //check if the apps exists
             //creating a mutable map of apps
-            var apps: MutableMap<String, Boolean> = mutableMapOf()
+            val apps: MutableMap<String, Boolean> = mutableMapOf()
             //assigning package manager
             val pm: PackageManager = context!!.packageManager
             //get a list of installed apps.
             val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
             //intent to check sms app exists
             val intent = Intent(Intent.ACTION_SENDTO).addCategory(Intent.CATEGORY_DEFAULT)
-            intent.type = "vnd.android-dir/mms-sms"
-            intent.data = Uri.parse("sms:")
+            intent.setDataAndType(Uri.parse("sms:"), "vnd.android-dir/mms-sms")
             val resolvedActivities: List<ResolveInfo> = pm.queryIntentActivities(intent, 0)
             //if sms app exists
             apps["sms"] = resolvedActivities.isNotEmpty()
             //if other app exists
             apps["instagram"] =
-                packages.any { it.packageName.toString().contentEquals("com.instagram.android") }
+                packages.any {
+                    it.packageName.toString().contentEquals("com.instagram.android")
+                }
             apps["facebook"] =
                 packages.any { it.packageName.toString().contentEquals("com.facebook.katana") }
             apps["twitter"] =
@@ -287,7 +296,9 @@ class SocialSharePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             apps["whatsapp"] =
                 packages.any { it.packageName.toString().contentEquals("com.whatsapp") }
             apps["telegram"] =
-                packages.any { it.packageName.toString().contentEquals("org.telegram.messenger") }
+                packages.any {
+                    it.packageName.toString().contentEquals("org.telegram.messenger")
+                }
 
             result.success(apps)
         } else {
@@ -295,7 +306,7 @@ class SocialSharePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         }
     }
 
-    override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
     }
 
