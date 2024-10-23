@@ -135,25 +135,19 @@
 //            result(@"not supported or no messenger installed");
 //        }
         
-        UIViewController *controller =[UIApplication sharedApplication].keyWindow.rootViewController;
+        UIViewController *topController =[UIApplication sharedApplication].keyWindow.rootViewController;
+        UIViewController *presentedViewController = [topController presentedViewController];
+        while (presentedViewController) {
+            topController = presentedViewController;
+            presentedViewController = [topController presentedViewController];
+        }
+        
         FBSDKShareDialog *dialog = [[FBSDKShareDialog alloc]
-                                    initWithViewController:controller
+                                    initWithViewController:topController
                                     content:shareLinkContent
                                     delegate:self];
-        [dialog setMode:FBSDKShareDialogModeNative];
-        if ([dialog canShow]) {
-            [dialog show];
-            result(@"success");
-            return;
-        } else {
-            [dialog setMode:FBSDKShareDialogModeWeb];
-            if ([dialog canShow]) {
-                [dialog show];
-                result(@"success");
-                return;
-            }
-        }
-        result(@"error");
+        [dialog show];
+        result(@"success");
     } else if ([@"copyToClipboard" isEqualToString:call.method]) {
         
         NSString *content = call.arguments[@"content"];
@@ -174,12 +168,18 @@
         
     } else if ([@"shareTwitter" isEqualToString:call.method]) {
         NSString *captionText = call.arguments[@"captionText"];
-        
-        NSString *urlSchemeTwitter = [NSString stringWithFormat:@"twitter://post?message=%@",captionText];
-        NSString* urlTextEscaped = [urlSchemeTwitter stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-        NSURL *urlSchemeSend = [NSURL URLWithString:urlTextEscaped];
+        NSString *urlSchemeTwitterApp = [NSString stringWithFormat:@"twitter://post?message=%@",captionText];
+        NSString* urlAppTextEscaped = [urlSchemeTwitterApp stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+        NSURL *urlAppSchemeSend = [NSURL URLWithString:urlAppTextEscaped];
         if (@available(iOS 10.0, *)) {
-            [[UIApplication sharedApplication] openURL:urlSchemeSend options:@{} completionHandler:nil];
+            if ([[UIApplication sharedApplication] canOpenURL:urlAppSchemeSend]) {
+                [[UIApplication sharedApplication] openURL:urlAppSchemeSend options:@{} completionHandler:nil];
+            } else {
+                NSString *urlSchemeTwitterWeb = [NSString stringWithFormat:@"https://twitter.com/post?message=%@",captionText];
+                NSString* urlWebTextEscaped = [urlSchemeTwitterWeb stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+                NSURL *urlWebSchemeSend = [NSURL URLWithString:urlWebTextEscaped];
+                [[UIApplication sharedApplication] openURL:urlWebSchemeSend];
+            }
             result(@"success");
         } else {
             result(@"error");
@@ -254,8 +254,8 @@
         
         }
     } else if ([@"shareSlack" isEqualToString:call.method]) {
-        //NSString *content = call.arguments[@"content"];
-        result([NSNumber numberWithBool:YES]);
+        // NSString *content = call.arguments[@"content"];
+        // result([NSNumber numberWithBool:YES]);
     } else if ([@"shareWhatsapp" isEqualToString:call.method]) {
         NSString *content = call.arguments[@"content"];
         NSString * urlWhats = [NSString stringWithFormat:@"whatsapp://send?text=%@",content];
