@@ -178,7 +178,7 @@
                 NSString *urlSchemeTwitterWeb = [NSString stringWithFormat:@"https://twitter.com/post?message=%@",captionText];
                 NSString* urlWebTextEscaped = [urlSchemeTwitterWeb stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
                 NSURL *urlWebSchemeSend = [NSURL URLWithString:urlWebTextEscaped];
-                [[UIApplication sharedApplication] openURL:urlWebSchemeSend];
+                [[UIApplication sharedApplication] openURL:urlWebSchemeSend options:@{} completionHandler:nil];
             }
             result(@"success");
         } else {
